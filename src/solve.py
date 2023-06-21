@@ -1,66 +1,46 @@
 # Solver for suduko puzzles
 # Author: Jesper Glas
 
-TEST: list[int] = [
-        0, 0, 0, 2, 6, 0, 7, 0, 1,
-        6, 8, 0, 0, 7, 0, 0, 9, 0,
-        1, 9, 0, 0, 0, 4, 5, 0, 0,
-        8, 2, 0, 1, 0, 0, 0, 4, 0,
-        0, 0, 4, 6, 0, 2, 9, 0, 0,
-        0, 5, 0, 0, 0, 3, 0, 2, 8,
-        0, 0, 9, 3, 0, 0, 0, 7, 4,
-        0, 4, 0, 0, 5, 0, 0, 3, 6,
-        7, 0, 3, 0, 1, 8, 0, 0, 0
-        ]
+import sys
 
-INTER: list[int] = [
-        0, 2, 0, 6, 0, 8, 0, 0, 0,
-        5, 8, 0, 0, 0, 9, 7, 0, 0,
-        0, 0, 0, 0, 4, 0, 0, 0, 0,
-        3, 7, 0, 0, 0, 0, 5, 0, 0,
-        6, 0, 0, 0, 0, 0, 0, 0, 4,
-        0, 0, 8, 0, 0, 0, 0, 1, 3,
-        0, 0, 0, 0, 2, 0, 0, 0, 0,
-        0, 0, 9, 8, 0, 0, 0, 3, 6,
-        0, 0, 0, 3, 0, 6, 0, 9, 0
-        ]
-
-DIFF: list[int] = [
-        0, 2, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 6, 0, 0, 0, 0, 3,
-        0, 7, 4, 0, 8, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 3, 0, 0, 2,
-        0, 8, 0, 0, 4, 0, 0, 1, 0,
-        6, 0, 0, 5, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 7, 8, 0,
-        5, 0, 0, 0, 0, 9, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 4, 0
-        ]
-
-# 0  1  2    3  4  5    6  7  8
-# 9  10 11   12 13 14   15 16 17
-# 18 19 20   21 22 23   24 25 26
-#
-# 27 28 29   30 31 32   33 34 35
-# 36 37 38   39 40 41   42 43 44
-# 45 46 47   48 49 50   51 52 53
-#
-# 54 55 56   57 58 59   60 61 62
-# 63 64 65   66 67 68   69 70 71
-# 72 73 74   75 76 77   78 79 80
 
 def main():
-    print(to_string(DIFF))
-    print(to_string(solve(DIFF)))
+    # make sure call has an argument (the suduko)
+    if len(args := sys.argv) < 2:
+        print("Please provide a suduko in the form '020 045 100...' where 0 represents empty spaces.")
+        return 1
+
+    # make sure that input is of correct length
+    if len(suduko := format_input(args[1])) != 81:
+        print(len(suduko))
+        print("Please provide a suduko with exactly 81 values.")
+        return 1
+
+    # print results
+    print(f"Original:\n{to_string(suduko)}")
+    print('\n')
+    print(f"Solved:\n{to_string(solve(suduko))}")
+
+def format_input(raw: str) -> list[int]:
+    # remove leading spaces
+    data: str = raw.strip()
+    # remove all whitespace
+    data = data.replace(' ', '')
+    # remove newlines
+    data = data.replace('\n', '')
+    return [int(char) for char in data]
 
 
 def solve(suduko: list[int]) -> list[int]:
-    unmutable: list[bool] = [x > 0 for x in suduko]
+    # keeps track of immutable values (original suduko entries)
+    immutable: list[bool] = [x > 0 for x in suduko]
+    # variables for DFS, using list (suduko) index
     queue: list[int] = []
     index: int = 0
+    # end condition of loop is last element
     while index < 81:
-        # skip unmutable
-        if unmutable[index]:
+        # skip immutable
+        if immutable[index]:
             index += 1
             continue
 
@@ -74,6 +54,10 @@ def solve(suduko: list[int]) -> list[int]:
             queue.append(index)
             index += 1
             continue
+        
+        # check if queue is populated, else its unsolvable
+        if len(queue) == 0:
+            break
 
         # else, backtrack in queue
         suduko[index] = 0
@@ -114,7 +98,7 @@ def to_string(data: list[int]) -> str:
     res: str = ""
     for i, x in enumerate(data):
         # add additional newline every third row
-        if i % 27 == 0:
+        if i % 27 == 0 and i != 0:
             res += "\n\n"
         # add standard new line every ninth element
         elif i % 9 == 0:
